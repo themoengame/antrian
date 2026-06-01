@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Aplikasi Antrian - Display 30% 70% + Marquee</title>
+    <title>Aplikasi Antrian - Display Final</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
@@ -32,7 +32,7 @@
             border: 1px solid rgba(99, 102, 241, 0.4);
             transition: all 0.2s;
             margin: 0.5rem;
-            flex: 1 1 auto;
+            box-sizing: border-box;
         }
         .operator-card-bottom:hover { background: rgba(30, 41, 59, 1); transform: translateY(-3px); }
         .clock { font-family: monospace; letter-spacing: 2px; }
@@ -54,15 +54,11 @@
             0% { transform: translateX(100%); }
             100% { transform: translateX(-100%); }
         }
-        /* Flex untuk baris operator */
+        /* Flex container untuk operator bawah */
         .operator-flex-row {
             display: flex;
             flex-wrap: wrap;
-            justify-content: flex-start;
             gap: 1rem;
-        }
-        .operator-flex-row .operator-card-bottom {
-            flex: 1 1 auto;
         }
     </style>
 </head>
@@ -112,7 +108,7 @@
         </div>
     </div>
 
-    <!-- VIEW ADMIN -->
+    <!-- VIEW ADMIN (singkat) -->
     <div id="viewAdmin" class="max-w-6xl mx-auto p-6 hidden">
         <div class="bg-white rounded-xl shadow-lg p-6">
             <div class="flex justify-between items-center mb-4">
@@ -179,17 +175,17 @@
         </div>
     </div>
 
-    <!-- ==================== DISPLAY PUBLIK (REVISI LENGKAP) ==================== -->
+    <!-- ==================== DISPLAY PUBLIK (REVISI AKHIR) ==================== -->
     <div id="viewDisplay" class="min-h-screen bg-gray-900 p-4 md:p-6 hidden">
         <div class="max-w-7xl mx-auto">
-            <!-- Header: Jam & Hari + Teks berjalan di bawahnya -->
+            <!-- Header: hanya jam & hari (tanpa tulisan Sistem Antrian Digital) -->
             <div class="bg-black/30 rounded-2xl p-4 mb-4 backdrop-blur">
                 <div class="flex justify-between items-center">
                     <div class="text-white">
                         <div class="text-3xl font-bold clock" id="currentTime">--:--:--</div>
                         <div class="text-xl text-indigo-200" id="currentDay">--, -- -- ----</div>
                     </div>
-                    <div class="text-indigo-300 text-sm italic">Sistem Antrian Digital</div>
+                    <!-- Tidak ada tulisan tambahan -->
                 </div>
                 <!-- Running text / Marquee -->
                 <div class="marquee-container mt-3">
@@ -197,7 +193,7 @@
                 </div>
             </div>
 
-            <!-- Dua Kolom dengan proporsi 30% (kiri) dan 70% (kanan) -->
+            <!-- Dua Kolom 30% - 70% -->
             <div class="flex flex-col lg:flex-row gap-6 mb-8">
                 <!-- Kiri: 30% -->
                 <div class="lg:w-[30%] w-full flex justify-center items-center">
@@ -216,11 +212,10 @@
                 </div>
             </div>
 
-            <!-- Bawah: Daftar operator dengan lebar dinamis (25% jika 4 per baris, 33.33% jika 3 per baris, dst) -->
+            <!-- Bawah: Daftar operator (stretch ke lebar layar, tanpa judul) -->
             <div class="mt-6">
-                <h3 class="text-white text-xl font-semibold mb-3"><i class="fas fa-user-tie mr-2"></i> Daftar Operator</h3>
                 <div id="operatorGridBottom" class="operator-flex-row">
-                    <!-- akan diisi JS dengan perhitungan persentase -->
+                    <!-- akan diisi JS dengan card yang stretch -->
                 </div>
             </div>
 
@@ -475,7 +470,7 @@
             speakText(`Nomor antrian ${formatNomor(nomorBaru)} telah keluar`);
         }
 
-        // ==================== DISPLAY PUBLIK (REVISI LENGKAP) ====================
+        // ==================== DISPLAY PUBLIK (REVISI AKHIR) ====================
         function updateClock() {
             const now = new Date();
             const timeStr = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
@@ -486,7 +481,7 @@
         setInterval(updateClock, 1000);
 
         function renderDisplayView() {
-            // Panel kiri (last call)
+            // Panel kiri
             if (lastCall) {
                 document.getElementById('lastLoket').innerText = lastCall.loket;
                 document.getElementById('lastNomor').innerHTML = `${(lastCall.loket <= 3 ? 'A' : 'B')} ${formatNomor(lastCall.nomor)}`;
@@ -497,7 +492,7 @@
                 document.getElementById('lastWaktu').innerHTML = 'Belum ada panggilan';
             }
 
-            // Daftar operator bawah (flex dengan persentase dinamis)
+            // Daftar operator bawah (stretch)
             const activeOperators = operators.filter(op => op.status === "Aktif").sort((a,b) => a.loket - b.loket);
             const bottomGrid = document.getElementById('operatorGridBottom');
             if(bottomGrid) {
@@ -513,7 +508,6 @@
                         const prefix = (op.loket <= 3) ? 'A' : 'B';
                         const card = document.createElement('div');
                         card.className = "operator-card-bottom p-3 text-center";
-                        card.style.flex = "1 1 auto"; // akan diatur ulang oleh CSS, tetapi persentase diatur via JS
                         card.innerHTML = `
                             <i class="fas fa-desktop text-indigo-400 text-2xl"></i>
                             <div class="text-white font-bold text-lg">LOKET ${op.loket}</div>
@@ -522,62 +516,56 @@
                         `;
                         bottomGrid.appendChild(card);
                     });
-                    // Atur lebar card berdasarkan jumlah per baris (maks 4 per baris)
-                    // Karena menggunakan flex wrap, kita hitung jumlah card per baris dengan window resize
+
+                    // Fungsi untuk mengatur lebar card agar stretch (maks 4 per baris)
                     function adjustCardWidth() {
                         const container = bottomGrid;
                         const cards = Array.from(container.children);
                         if (cards.length === 0) return;
-                        const containerWidth = container.clientWidth;
-                        // Reset dulu lebar
+                        // Reset width
                         cards.forEach(card => {
                             card.style.width = '';
                             card.style.flex = '';
                         });
-                        // Dapatkan jumlah per baris dengan simulasi
-                        let rowCount = 0;
+                        // Hitung jumlah per baris berdasarkan posisi
+                        let rows = [];
+                        let currentRow = [];
                         let prevTop = null;
-                        let itemsPerRow = [];
-                        cards.forEach((card, idx) => {
+                        cards.forEach((card) => {
                             const rect = card.getBoundingClientRect();
                             const top = rect.top;
-                            if (prevTop === null || top !== prevTop) {
-                                rowCount++;
-                                itemsPerRow[rowCount-1] = 1;
+                            if (prevTop === null || Math.abs(top - prevTop) > 5) {
+                                if (currentRow.length) rows.push(currentRow);
+                                currentRow = [card];
                             } else {
-                                itemsPerRow[rowCount-1]++;
+                                currentRow.push(card);
                             }
                             prevTop = top;
                         });
-                        // Set lebar berdasarkan itemsPerRow
-                        let cardIndex = 0;
-                        for (let r = 0; r < itemsPerRow.length; r++) {
-                            const count = itemsPerRow[r];
-                            let percent = 100 / count;
-                            for (let i = 0; i < count; i++) {
-                                const card = cards[cardIndex++];
-                                if (card) {
-                                    card.style.width = `calc(${percent}% - 1rem)`;
-                                    card.style.flex = '0 0 auto';
-                                }
-                            }
-                        }
+                        if (currentRow.length) rows.push(currentRow);
+                        // Untuk setiap baris, atur lebar card secara merata
+                        rows.forEach(row => {
+                            const count = row.length;
+                            const percent = 100 / count;
+                            row.forEach(card => {
+                                card.style.width = `calc(${percent}% - 1rem)`;
+                                card.style.flex = '0 0 auto';
+                            });
+                        });
                     }
                     adjustCardWidth();
-                    window.addEventListener('resize', adjustCardWidth);
-                    // Simpan fungsi agar tidak double, tapi cukup panggil ulang
-                    bottomGrid._resizeHandler = adjustCardWidth;
-                    // Hapus listener lama jika ada
-                    if (bottomGrid.oldResize) window.removeEventListener('resize', bottomGrid.oldResize);
-                    bottomGrid.oldResize = adjustCardWidth;
-                    window.addEventListener('resize', adjustCardWidth);
+                    // Event listener resize
+                    const resizeHandler = () => adjustCardWidth();
+                    window.removeEventListener('resize', bottomGrid._resizeHandler);
+                    window.addEventListener('resize', resizeHandler);
+                    bottomGrid._resizeHandler = resizeHandler;
                 }
             }
 
-            // Update teks berjalan
+            // Teks berjalan
             const marqueeEl = document.getElementById('marqueeText');
             if (marqueeEl) marqueeEl.innerText = marqueeText;
-            // Update YouTube
+            // YouTube
             const youtubeFrame = document.getElementById('youtubeFrame');
             const youtubeInput = document.getElementById('youtubeLinkInput');
             if(youtubeFrame && youtubeInput && youtubeInput.value !== youtubeFrame.src) {
