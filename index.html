@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Aplikasi Antrian - Display Responsif</title>
+    <title>Aplikasi Antrian - Display Tinggi Sama</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
@@ -52,11 +52,27 @@
             0% { transform: translateX(100%); }
             100% { transform: translateX(-100%); }
         }
-        /* Flex container untuk operator bawah */
         .operator-flex-row {
             display: flex;
             flex-wrap: wrap;
             gap: 1rem;
+        }
+        /* Agar kolom kiri setinggi kolom kanan */
+        .left-column {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+        .last-call-card-wrapper {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        .last-call-card {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
         }
     </style>
 </head>
@@ -79,7 +95,7 @@
         </div>
     </div>
 
-    <!-- MENU UTAMA -->
+    <!-- MENU UTAMA (sama seperti sebelumnya) -->
     <div id="menuUtama" class="min-h-screen flex flex-col justify-center items-center p-6 hidden relative" style="background: linear-gradient(135deg, #667eea, #764ba2);">
         <div class="absolute top-6 right-6">
             <button id="logoutBtn" class="bg-white/20 backdrop-blur px-5 py-2 rounded-full text-white"><i class="fas fa-sign-out-alt mr-2"></i> Logout</button>
@@ -106,7 +122,7 @@
         </div>
     </div>
 
-    <!-- VIEW ADMIN -->
+    <!-- VIEW ADMIN (ringkas, sama seperti sebelumnya) -->
     <div id="viewAdmin" class="max-w-6xl mx-auto p-6 hidden">
         <div class="bg-white rounded-xl shadow-lg p-6">
             <div class="flex justify-between items-center mb-4">
@@ -173,7 +189,7 @@
         </div>
     </div>
 
-    <!-- ==================== DISPLAY PUBLIK (RESPONSIF) ==================== -->
+    <!-- ==================== DISPLAY PUBLIK (TINGGI SAMA) ==================== -->
     <div id="viewDisplay" class="min-h-screen bg-gray-900 p-4 md:p-6 hidden">
         <div class="max-w-7xl mx-auto">
             <!-- Teks berjalan -->
@@ -181,36 +197,38 @@
                 <div class="marquee-text text-white text-lg font-semibold" id="marqueeText">Selamat Datang di Sistem Antrian</div>
             </div>
 
-            <!-- Dua Kolom 30% - 70% -->
+            <!-- Dua kolom dengan tinggi sama (kiri 30%, kanan 70%) -->
             <div class="flex flex-col lg:flex-row gap-6 mb-8">
-                <!-- Kiri: 30% dengan jam & hari -->
-                <div class="lg:w-[30%] w-full">
+                <!-- Kiri: 30% dengan tinggi penuh, berisi jam dan kartu loket -->
+                <div class="lg:w-[30%] w-full left-column">
+                    <!-- Jam -->
                     <div class="bg-black/30 rounded-2xl p-4 mb-4 backdrop-blur text-center">
                         <div class="text-white">
                             <div class="text-2xl font-bold clock" id="currentTime">--:--:--</div>
                             <div class="text-md text-indigo-200" id="currentDay">--, -- -- ----</div>
                         </div>
                     </div>
-                    <div id="lastCallCard" class="last-call-card w-full p-6 text-center">
-                        <div class="text-indigo-300 text-2xl font-bold mb-2">LOKET <span id="lastLoket">-</span></div>
-                        <div class="text-gray-400 text-sm uppercase tracking-wide">Panggilan Terakhir</div>
-                        <div class="nomor-raksasa text-white mt-3" id="lastNomor">---</div>
-                        <div class="text-green-400 mt-4 text-lg" id="lastWaktu">Belum ada panggilan</div>
+                    <!-- Kartu loket terakhir - akan mengisi sisa ruang -->
+                    <div class="last-call-card-wrapper">
+                        <div id="lastCallCard" class="last-call-card w-full p-6 text-center">
+                            <div class="text-indigo-300 text-2xl font-bold mb-2">LOKET <span id="lastLoket">-</span></div>
+                            <div class="text-gray-400 text-sm uppercase tracking-wide">Panggilan Terakhir</div>
+                            <div class="nomor-raksasa text-white mt-3" id="lastNomor">---</div>
+                            <div class="text-green-400 mt-4 text-lg" id="lastWaktu">Belum ada panggilan</div>
+                        </div>
                     </div>
                 </div>
-                <!-- Kanan: 70% YouTube -->
+                <!-- Kanan: 70% YouTube (tinggi otomatis berdasarkan aspek ratio) -->
                 <div class="lg:w-[70%] w-full">
-                    <div class="bg-black rounded-2xl overflow-hidden shadow-xl border border-indigo-500/30">
+                    <div class="bg-black rounded-2xl overflow-hidden shadow-xl border border-indigo-500/30 h-full">
                         <iframe id="youtubeFrame" class="w-full aspect-video" src="https://www.youtube.com/embed/dQw4w9WgXcQ" frameborder="0" allowfullscreen></iframe>
                     </div>
                 </div>
             </div>
 
-            <!-- Bawah: Daftar operator (responsif, stretch ke lebar) -->
+            <!-- Bawah: Daftar operator (responsif) -->
             <div class="mt-6">
-                <div id="operatorGridBottom" class="operator-flex-row">
-                    <!-- akan diisi JS -->
-                </div>
+                <div id="operatorGridBottom" class="operator-flex-row"></div>
             </div>
 
             <!-- Tombol kembali -->
@@ -464,7 +482,7 @@
             speakText(`Nomor antrian ${formatNomor(nomorBaru)} telah keluar`);
         }
 
-        // ==================== DISPLAY PUBLIK (RESPONSIF) ====================
+        // ==================== DISPLAY PUBLIK (TINGGI SAMA) ====================
         function updateClock() {
             const now = new Date();
             const timeStr = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
@@ -486,19 +504,17 @@
                 document.getElementById('lastWaktu').innerHTML = 'Belum ada panggilan';
             }
 
-            // Daftar operator bawah - RESPONSIF STRETCH
+            // Daftar operator bawah - responsif
             const activeOperators = operators.filter(op => op.status === "Aktif").sort((a,b) => a.loket - b.loket);
             const bottomGrid = document.getElementById('operatorGridBottom');
             if (!bottomGrid) return;
 
-            // Kosongkan dulu
             bottomGrid.innerHTML = '';
             if (activeOperators.length === 0) {
                 bottomGrid.innerHTML = '<div class="text-white w-full text-center">Belum ada operator aktif</div>';
                 return;
             }
 
-            // Buat card untuk setiap operator
             activeOperators.forEach(op => {
                 const lastForThis = servingList.filter(s => s.loket == op.loket).pop();
                 const lastNumber = lastForThis ? lastForThis.nomor : null;
@@ -515,50 +531,35 @@
                 bottomGrid.appendChild(card);
             });
 
-            // Fungsi untuk mengatur lebar card secara presisi berdasarkan aturan (≤4 satu baris, =5 satu baris, ≥6 dua baris)
-            const gapRem = 1; // gap 1rem = 16px (asumsi 1rem = 16px)
+            // Atur lebar card secara presisi
+            const gapRem = 1;
             function adjustCardWidth() {
-                const container = bottomGrid;
-                const cards = Array.from(container.children);
+                const cards = Array.from(bottomGrid.children);
                 if (cards.length === 0) return;
-                const containerRect = container.getBoundingClientRect();
+                const containerRect = bottomGrid.getBoundingClientRect();
                 const containerWidth = containerRect.width;
-                const gapPx = parseFloat(getComputedStyle(container).gap) || 16;
-                const totalCards = cards.length;
+                const gapPx = parseFloat(getComputedStyle(bottomGrid).gap) || 16;
+                const total = cards.length;
 
                 let itemsPerRow = [];
-                if (totalCards <= 4) {
-                    // satu baris
-                    itemsPerRow = [totalCards];
-                } else if (totalCards === 5) {
-                    // satu baris
-                    itemsPerRow = [5];
-                } else {
-                    // >=6: baris pertama 4, baris kedua sisanya
-                    const firstRowCount = 4;
-                    const secondRowCount = totalCards - firstRowCount;
-                    itemsPerRow = [firstRowCount, secondRowCount];
-                }
+                if (total <= 4) itemsPerRow = [total];
+                else if (total === 5) itemsPerRow = [5];
+                else itemsPerRow = [4, total - 4];
 
-                // Hitung lebar per card berdasarkan baris
                 let cardIndex = 0;
-                for (let row of itemsPerRow) {
-                    const cardsInRow = cards.slice(cardIndex, cardIndex + row);
-                    const availableWidth = containerWidth - (gapPx * (row - 1));
-                    const cardWidth = availableWidth / row;
-                    cardsInRow.forEach(card => {
+                for (let rowCount of itemsPerRow) {
+                    const rowCards = cards.slice(cardIndex, cardIndex + rowCount);
+                    const availableWidth = containerWidth - (gapPx * (rowCount - 1));
+                    const cardWidth = availableWidth / rowCount;
+                    rowCards.forEach(card => {
                         card.style.width = `${cardWidth}px`;
                         card.style.flex = '0 0 auto';
                     });
-                    cardIndex += row;
+                    cardIndex += rowCount;
                 }
             }
-
             adjustCardWidth();
-            // Hapus listener resize lama jika ada
-            if (bottomGrid._resizeHandler) {
-                window.removeEventListener('resize', bottomGrid._resizeHandler);
-            }
+            if (bottomGrid._resizeHandler) window.removeEventListener('resize', bottomGrid._resizeHandler);
             const resizeHandler = () => adjustCardWidth();
             window.addEventListener('resize', resizeHandler);
             bottomGrid._resizeHandler = resizeHandler;
@@ -616,7 +617,7 @@
         renderDisplayView();
         checkLogin();
         showView('menuUtama');
-        // Data contoh
+        // Contoh data awal
         if(servingList.length === 0 && waitingNumbers.length === 0 && lastIssuedNumber === 0) {
             servingList.push({ nomor: 145, loket: 1, waktu: "10:25:30" });
             servingList.push({ nomor: 146, loket: 2, waktu: "10:26:00" });
