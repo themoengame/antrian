@@ -3,331 +3,550 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Aplikasi Antrian - Dinamis (Tab Operator sesuai jumlah operator aktif)</title>
-    <!-- Tailwind CSS + Font Awesome -->
+    <title>Aplikasi Antrian - Display dengan YouTube & Waktu</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
-        .modal { transition: opacity 0.2s ease; }
-        .btn-number { transition: all 0.1s ease; }
-        .btn-number:active { transform: scale(0.96); }
-        .display-card { background: linear-gradient(145deg, #1e293b 0%, #0f172a 100%); }
-        .tab-active { background-color: #4f46e5; color: white; border-bottom: 2px solid white; }
-        .tab-inactive { background-color: #e2e8f0; color: #1e293b; }
+        * { font-family: 'Inter', sans-serif; }
+        body { background: #0f172a; }
+        .display-card-loket {
+            background: linear-gradient(145deg, #1e293b, #0f172a);
+            border-radius: 1.5rem;
+            border: 1px solid rgba(99, 102, 241, 0.4);
+            transition: transform 0.2s;
+        }
+        .display-card-loket:hover { transform: translateY(-4px); }
+        .nomor-besar {
+            font-size: 3rem;
+            font-weight: 800;
+            text-shadow: 0 0 10px rgba(99,102,241,0.5);
+        }
+        @media (min-width: 1024px) {
+            .nomor-besar { font-size: 3.5rem; }
+        }
+        .operator-card {
+            background: rgba(30, 41, 59, 0.8);
+            backdrop-filter: blur(4px);
+            border-radius: 1.2rem;
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            transition: all 0.2s;
+        }
+        .operator-card:hover { background: rgba(30, 41, 59, 1); }
+        .clock {
+            font-family: monospace;
+            letter-spacing: 2px;
+        }
     </style>
 </head>
-<body class="bg-gray-100 font-sans">
+<body>
 
-    <!-- Navigasi antar tampilan (Admin / Operator / Display) -->
-    <div class="bg-white shadow-md sticky top-0 z-10">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between items-center py-3">
-                <h1 class="text-xl font-bold text-indigo-700"><i class="fas fa-ticket-alt mr-2"></i>Sistem Antrian</h1>
-                <div class="space-x-2">
-                    <button id="btnAdmin" class="px-4 py-2 rounded-lg font-medium bg-indigo-600 text-white shadow">👨‍💼 Admin</button>
-                    <button id="btnOperator" class="px-4 py-2 rounded-lg font-medium bg-gray-200 text-gray-700 hover:bg-gray-300">🖥️ Operator</button>
-                    <button id="btnDisplay" class="px-4 py-2 rounded-lg font-medium bg-gray-200 text-gray-700 hover:bg-gray-300">📺 Display Publik</button>
+    <!-- LOGIN SCREEN -->
+    <div id="loginScreen" class="min-h-screen flex items-center justify-center p-6" style="background: linear-gradient(135deg, #1e1b4b, #312e81);">
+        <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full">
+            <div class="text-center mb-6">
+                <i class="fas fa-ticket-alt text-5xl text-indigo-600 mb-3"></i>
+                <h2 class="text-3xl font-bold">Sistem Antrian</h2>
+                <p class="text-gray-500">Login untuk mengelola</p>
+            </div>
+            <div class="space-y-4">
+                <input type="text" id="loginUsername" class="w-full border rounded-xl px-4 py-3" placeholder="Username (admin)" autocomplete="off">
+                <input type="password" id="loginPassword" class="w-full border rounded-xl px-4 py-3" placeholder="Password (admin)">
+                <button id="loginBtn" class="w-full bg-indigo-600 text-white font-bold py-3 rounded-xl">Login</button>
+                <p class="text-xs text-gray-400 text-center">Demo: admin / admin</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- MENU UTAMA -->
+    <div id="menuUtama" class="min-h-screen flex flex-col justify-center items-center p-6 hidden relative" style="background: linear-gradient(135deg, #667eea, #764ba2);">
+        <div class="absolute top-6 right-6">
+            <button id="logoutBtn" class="bg-white/20 backdrop-blur px-5 py-2 rounded-full text-white"><i class="fas fa-sign-out-alt mr-2"></i> Logout</button>
+        </div>
+        <div class="max-w-5xl w-full">
+            <div class="text-center mb-12">
+                <h1 class="text-5xl font-extrabold text-white drop-shadow-lg"><i class="fas fa-ticket-alt mr-4"></i>AntrianKu</h1>
+                <p class="text-indigo-100 text-xl">Sistem Antrian Digital</p>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+                <div class="bg-white/20 backdrop-blur rounded-2xl p-6 text-center text-white cursor-pointer hover:scale-105 transition" id="menuAdmin">
+                    <i class="fas fa-users-cog text-6xl mb-3"></i><h2 class="text-2xl font-bold">Admin</h2>
+                </div>
+                <div class="bg-white/20 backdrop-blur rounded-2xl p-6 text-center text-white cursor-pointer hover:scale-105 transition" id="menuOperator">
+                    <i class="fas fa-user-tie text-6xl mb-3"></i><h2 class="text-2xl font-bold">Operator</h2>
+                </div>
+                <div class="bg-white/20 backdrop-blur rounded-2xl p-6 text-center text-white cursor-pointer hover:scale-105 transition" id="menuMesinAntrian">
+                    <i class="fas fa-print text-6xl mb-3"></i><h2 class="text-2xl font-bold">Mesin Antrian</h2>
+                </div>
+                <div class="bg-white/20 backdrop-blur rounded-2xl p-6 text-center text-white cursor-pointer hover:scale-105 transition" id="menuDisplay">
+                    <i class="fas fa-tv text-6xl mb-3"></i><h2 class="text-2xl font-bold">Display Publik</h2>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- =============================== VIEW ADMIN =============================== -->
-    <div id="viewAdmin" class="max-w-6xl mx-auto p-4 md:p-6">
-        <div class="bg-white rounded-xl shadow-lg overflow-hidden">
-            <div class="bg-indigo-700 px-6 py-4">
-                <h2 class="text-xl font-bold text-white"><i class="fas fa-users-cog mr-2"></i>Manajemen Operator</h2>
-                <p class="text-indigo-100 text-sm">Kelola akun operator (jumlah operator = jumlah tab di halaman Operator)</p>
+    <!-- VIEW ADMIN (disederhanakan tapi tetap fungsional) -->
+    <div id="viewAdmin" class="max-w-6xl mx-auto p-6 hidden">
+        <div class="bg-white rounded-xl shadow-lg p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-2xl font-bold text-indigo-700">Manajemen Operator</h2>
+                <button class="backToMenu bg-gray-500 text-white px-4 py-2 rounded-lg">← Kembali</button>
             </div>
-            <div class="p-6">
-                <div class="flex justify-end mb-5">
-                    <button id="openModalBtn" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg shadow flex items-center gap-2">
-                        <i class="fas fa-plus-circle"></i> Tambah Operator
-                    </button>
+            <div class="mb-4 flex gap-2">
+                <button id="openModalBtn" class="bg-green-600 text-white px-4 py-2 rounded">+ Tambah Operator</button>
+                <button id="resetNomorBtn" class="bg-red-600 text-white px-4 py-2 rounded">↺ Reset Antrian</button>
+            </div>
+            <table class="w-full border">
+                <thead class="bg-gray-100"><tr><th>Nama</th><th>Username</th><th>Loket</th><th>Status</th><th>Aksi</th></tr></thead>
+                <tbody id="operatorTableBody"></tbody>
+            </table>
+            <div class="mt-6 border p-4 rounded">
+                <label class="font-semibold">Teks Berjalan Display:</label>
+                <input type="text" id="marqueeTextInput" class="w-full border rounded px-3 py-2 mt-1" value="Selamat Datang di Sistem Antrian">
+                <button id="saveMarqueeBtn" class="mt-2 bg-indigo-600 text-white px-4 py-2 rounded">Simpan Teks</button>
+            </div>
+            <div class="mt-4 border p-4 rounded">
+                <label class="font-semibold">Pengaturan Suara</label>
+                <div class="flex items-center gap-4 mt-2">
+                    <label><input type="checkbox" id="soundEnabledCheckbox"> Aktifkan suara</label>
+                    <input type="range" id="volumeSlider" min="0" max="100" value="80">
+                    <span id="volumeValue">80%</span>
+                    <select id="voiceSelect"></select>
+                    <button id="testSoundBtn" class="bg-gray-200 px-3 py-1 rounded">Uji</button>
                 </div>
-                <div class="overflow-x-auto">
-                    <table class="min-w-full bg-white border border-gray-200 rounded-lg">
-                        <thead class="bg-gray-100">
-                            <tr><th class="py-3 px-4 border-b text-left">Nama</th><th class="py-3 px-4 border-b text-left">Username</th><th class="py-3 px-4 border-b text-left">Loket</th><th class="py-3 px-4 border-b text-left">Status</th><th class="py-3 px-4 border-b text-center">Aksi</th></tr>
-                        </thead>
-                        <tbody id="operatorTableBody"></tbody>
-                    </table>
-                </div>
-                <div class="mt-10 grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div class="border rounded-lg p-4 bg-gray-50"><h3 class="font-semibold"><i class="fas fa-chart-line"></i> Antrian Hari Ini</h3><p>Total: 24 | Selesai: 18 | Menunggu: 6</p><button class="mt-2 text-sm text-indigo-600">Export Laporan</button></div>
-                    <div class="border rounded-lg p-4 bg-gray-50"><h3 class="font-semibold"><i class="fas fa-chart-bar"></i> Kinerja Loket</h3><p>Loket 1: 12 | Loket 2: 8 | Loket 3: 4</p></div>
-                </div>
+            </div>
+            <div class="mt-4 border p-4 rounded">
+                <label class="font-semibold">Link YouTube (Embed):</label>
+                <input type="text" id="youtubeLinkInput" class="w-full border rounded px-3 py-2" placeholder="https://www.youtube.com/embed/..." value="https://www.youtube.com/embed/dQw4w9WgXcQ">
+                <button id="saveYoutubeBtn" class="mt-2 bg-red-600 text-white px-4 py-2 rounded">Update Video</button>
             </div>
         </div>
     </div>
 
-    <!-- =============================== VIEW OPERATOR (dengan TAB dinamis) =============================== -->
-    <div id="viewOperator" class="max-w-7xl mx-auto p-4 md:p-6 hidden">
-        <div class="bg-white rounded-xl shadow-lg overflow-hidden">
-            <!-- Tab container dinamis -->
-            <div class="flex flex-wrap border-b" id="operatorTabsContainer"></div>
-            
-            <!-- Panel konten operator (menampilkan daftar antrian & serving sesuai operator aktif) -->
-            <div class="p-5">
-                <div id="activeOperatorInfo" class="mb-4 text-lg font-semibold"></div>
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    <div class="lg:col-span-2">
-                        <h3 class="font-bold text-gray-700 mb-3"><i class="fas fa-list-ol mr-2 text-indigo-600"></i>Antrian Tersedia (Waiting)</h3>
-                        <div id="waitingNumbersContainer" class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3"></div>
+    <!-- VIEW DAFTAR OPERATOR -->
+    <div id="viewDaftarOperator" class="max-w-4xl mx-auto p-6 hidden">
+        <div class="bg-white rounded-xl p-6">
+            <div class="flex justify-between"><h2 class="text-2xl font-bold">Pilih Operator</h2><button class="backToMenu bg-gray-500 text-white px-4 py-2 rounded">← Kembali</button></div>
+            <div id="operatorListContainer" class="grid grid-cols-2 gap-4 mt-4"></div>
+        </div>
+    </div>
+
+    <!-- VIEW OPERATOR SPESIFIK -->
+    <div id="viewOperatorSpesifik" class="max-w-7xl mx-auto p-6 hidden">
+        <div class="bg-white rounded-xl p-6">
+            <div class="flex justify-between"><div><h2 id="operatorTitle" class="text-2xl font-bold"></h2><p id="operatorLoketInfo"></p></div><button class="backToMenu bg-gray-500 text-white px-4 py-2 rounded">← Kembali</button></div>
+            <div class="grid md:grid-cols-2 gap-6 mt-4">
+                <div><h3 class="font-bold">Antrian Tersedia</h3><div id="waitingNumbersContainer" class="grid grid-cols-4 gap-2"></div></div>
+                <div><h3 class="font-bold">Sedang Dilayani</h3><div id="servingList"></div><h3 class="font-bold mt-4">Log</h3><div id="callLog" class="text-sm max-h-40 overflow-auto"></div></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- VIEW MESIN ANTRIAN -->
+    <div id="viewMesinAntrian" class="max-w-md mx-auto p-6 hidden">
+        <div class="bg-white rounded-xl p-6 text-center">
+            <h2 class="text-2xl font-bold">Mesin Antrian</h2>
+            <button id="ambilNomorBtn" class="bg-green-600 text-white text-2xl font-bold py-4 px-8 rounded-full mt-4"><i class="fas fa-print"></i> CETAK NOMOR</button>
+            <div id="nomorBaru" class="text-5xl font-bold text-indigo-800 mt-6 hidden"></div>
+            <button class="backToMenu mt-6 bg-gray-500 text-white px-4 py-2 rounded">← Kembali</button>
+        </div>
+    </div>
+
+    <!-- ==================== DISPLAY PUBLIK (BARU) ==================== -->
+    <div id="viewDisplay" class="min-h-screen bg-gray-900 p-4 md:p-6 hidden">
+        <div class="max-w-7xl mx-auto">
+            <!-- Header: Waktu dan Hari -->
+            <div class="flex justify-between items-center bg-black/30 rounded-2xl p-4 mb-6 backdrop-blur">
+                <div class="text-white">
+                    <div class="text-3xl font-bold clock" id="currentTime">--:--:--</div>
+                    <div class="text-xl text-indigo-200" id="currentDay">--, -- -- ----</div>
+                </div>
+                <div class="text-indigo-300 text-sm italic">Sistem Antrian Digital</div>
+            </div>
+
+            <!-- Dua Kolom: Kiri (Status Panggilan per Loket) & Kanan (YouTube) -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+                <!-- Kiri: Daftar antrian yang sedang dilayani per loket (terbaru dipanggil) -->
+                <div class="lg:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <!-- Kontainer dinamis untuk daftar loket aktif dengan nomor terakhir dipanggil -->
+                    <div id="leftPanelContainer" class="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full">
+                        <!-- akan diisi JS -->
                     </div>
-                    <div>
-                        <h3 class="font-bold text-gray-700 mb-3"><i class="fas fa-spinner fa-pulse"></i> Sedang Dilayani (Semua Loket)</h3>
-                        <div id="servingList" class="space-y-2 max-h-60 overflow-y-auto mb-4"></div>
-                        <h3 class="font-bold text-gray-700 mb-2"><i class="fas fa-history"></i> Log Panggilan</h3>
-                        <div id="callLog" class="text-sm space-y-1 max-h-48 overflow-y-auto bg-gray-50 p-2 rounded border"></div>
-                    </div>
                 </div>
+                <!-- Kanan: Frame YouTube -->
+                <div class="bg-black rounded-2xl overflow-hidden shadow-xl border border-indigo-500/30 h-full">
+                    <iframe id="youtubeFrame" class="w-full aspect-video" src="https://www.youtube.com/embed/dQw4w9WgXcQ" frameborder="0" allowfullscreen></iframe>
+                </div>
+            </div>
+
+            <!-- Bawah: Daftar operator (loket) dalam baris, max 4 per baris -->
+            <div class="mt-6">
+                <h3 class="text-white text-xl font-semibold mb-3"><i class="fas fa-user-tie mr-2"></i> Daftar Operator</h3>
+                <div id="operatorGridBottom" class="flex flex-wrap gap-4 justify-start">
+                    <!-- akan diisi JS -->
+                </div>
+            </div>
+
+            <!-- Tombol kembali di footer (tidak mencolok) -->
+            <div class="text-center mt-10">
+                <button class="backToMenu bg-white/10 backdrop-blur text-white/80 px-5 py-2 rounded-full hover:bg-white/20"><i class="fas fa-arrow-left mr-2"></i> Kembali ke Menu</button>
             </div>
         </div>
     </div>
 
-    <!-- =============================== VIEW DISPLAY PUBLIK =============================== -->
-    <div id="viewDisplay" class="min-h-screen bg-gray-900 p-6 hidden">
-        <div class="max-w-5xl mx-auto">
-            <h1 class="text-4xl font-bold text-white text-center mb-8"><i class="fas fa-tv mr-3"></i>Papan Informasi Antrian</h1>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6" id="displayGrid"></div>
-        </div>
-    </div>
-
-    <!-- MODAL untuk tambah/edit operator -->
-    <div id="operatorModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-20 hidden">
-        <div class="bg-white rounded-xl w-full max-w-md p-6">
-            <h3 class="text-xl font-bold mb-4" id="modalTitle">Tambah Operator</h3>
+    <!-- MODAL OPERATOR -->
+    <div id="operatorModal" class="fixed inset-0 bg-black/50 flex items-center justify-center hidden z-30">
+        <div class="bg-white p-6 rounded-xl w-96">
+            <h3 id="modalTitle" class="text-xl font-bold">Tambah Operator</h3>
             <input type="hidden" id="editOperatorId">
-            <input type="text" id="opNama" placeholder="Nama" class="w-full border rounded px-3 py-2 mb-2">
-            <input type="text" id="opUsername" placeholder="Username" class="w-full border rounded px-3 py-2 mb-2">
-            <input type="password" id="opPassword" placeholder="Password" class="w-full border rounded px-3 py-2 mb-2">
-            <select id="opLoket" class="w-full border rounded px-3 py-2 mb-2"><option value="1">Loket 1</option><option value="2">Loket 2</option><option value="3">Loket 3</option><option value="4">Loket 4</option><option value="5">Loket 5</option></select>
-            <select id="opStatus" class="w-full border rounded px-3 py-2 mb-2"><option value="Aktif">Aktif</option><option value="Nonaktif">Nonaktif</option></select>
-            <div class="flex justify-end gap-2 mt-4">
-                <button id="closeModalBtn" class="px-4 py-2 bg-gray-300 rounded">Batal</button>
-                <button id="saveOperatorBtn" class="px-4 py-2 bg-indigo-600 text-white rounded">Simpan</button>
-            </div>
+            <input type="text" id="opNama" placeholder="Nama" class="w-full border p-2 my-2">
+            <input type="text" id="opUsername" placeholder="Username" class="w-full border p-2 my-2">
+            <select id="opLoket" class="w-full border p-2 my-2">
+                <option value="1">Loket 1</option><option value="2">Loket 2</option><option value="3">Loket 3</option>
+                <option value="4">Loket 4</option><option value="5">Loket 5</option><option value="6">Loket 6</option>
+                <option value="7">Loket 7</option><option value="8">Loket 8</option>
+            </select>
+            <select id="opStatus" class="w-full border p-2 my-2"><option value="Aktif">Aktif</option><option value="Nonaktif">Nonaktif</option></select>
+            <div class="flex justify-end gap-2 mt-4"><button id="closeModalBtn" class="bg-gray-300 px-4 py-2 rounded">Batal</button><button id="saveOperatorBtn" class="bg-indigo-600 text-white px-4 py-2 rounded">Simpan</button></div>
         </div>
     </div>
 
     <script>
-        // ==================== DATA OPERATOR & ANTRIAN ====================
+        // ==================== DATA UTAMA ====================
         let operators = [
             { id: 1, nama: "Siti", username: "siti01", loket: "1", status: "Aktif" },
             { id: 2, nama: "Budi", username: "budi02", loket: "2", status: "Aktif" },
-            { id: 3, nama: "Ani", username: "ani03", loket: "3", status: "Nonaktif" }
+            { id: 3, nama: "Ani", username: "ani03", loket: "3", status: "Nonaktif" },
+            { id: 4, nama: "Joko", username: "joko04", loket: "4", status: "Aktif" },
+            { id: 5, nama: "Dewi", username: "dewi05", loket: "5", status: "Aktif" }
         ];
-        let nextOperatorId = 4;
-        let waitingNumbers = [101,102,103,104,105,106,107,108,109,110, 201,202,203,204,205, 301,302,303];
-        let servingList = []; // { nomor, loket, waktu, operatorNama }
+        let nextOperatorId = 6;
+        let lastIssuedNumber = 0;
+        let waitingNumbers = [];
+        let servingList = [];       // { nomor, loket, waktu }
         let callLogs = [];
+        let currentOperator = null;
+        let marqueeText = "Selamat Datang di Sistem Antrian";
+        let youtubeUrl = "https://www.youtube.com/embed/dQw4w9WgXcQ";
 
-        // Operator yang sedang aktif di halaman operator (index atau id)
-        let currentOperatorId = null;
+        // Helper format nomor tiga digit
+        function formatNomor(num) { return String(num).padStart(3, '0'); }
 
-        // Fungsi render tabel admin
+        // ==================== FUNGSI LOGIN & NAVIGASI ====================
+        function checkLogin() {
+            if (sessionStorage.getItem('loggedIn') === 'true') {
+                document.getElementById('loginScreen').classList.add('hidden');
+                document.getElementById('menuUtama').classList.remove('hidden');
+            } else {
+                document.getElementById('loginScreen').classList.remove('hidden');
+                document.getElementById('menuUtama').classList.add('hidden');
+            }
+        }
+        function login() {
+            const user = document.getElementById('loginUsername').value;
+            const pass = document.getElementById('loginPassword').value;
+            if (user === 'admin' && pass === 'admin') {
+                sessionStorage.setItem('loggedIn', 'true');
+                checkLogin();
+            } else alert('Login gagal! gunakan admin/admin');
+        }
+        function logout() {
+            sessionStorage.removeItem('loggedIn');
+            checkLogin();
+            document.querySelectorAll('#viewAdmin, #viewDaftarOperator, #viewOperatorSpesifik, #viewMesinAntrian, #viewDisplay').forEach(v => v.classList.add('hidden'));
+        }
+        function showView(viewId) {
+            document.querySelectorAll('#menuUtama, #viewAdmin, #viewDaftarOperator, #viewOperatorSpesifik, #viewMesinAntrian, #viewDisplay').forEach(v => v.classList.add('hidden'));
+            document.getElementById(viewId).classList.remove('hidden');
+        }
+
+        // ==================== SUARA (ringkas) ====================
+        let soundEnabled = true, volume = 0.8, selectedVoiceURI = null, availableVoices = [];
+        function initSpeech() {
+            if (!window.speechSynthesis) return;
+            const loadVoices = () => {
+                availableVoices = window.speechSynthesis.getVoices();
+                const sel = document.getElementById('voiceSelect');
+                if (sel) {
+                    sel.innerHTML = '';
+                    availableVoices.forEach(v => {
+                        let opt = document.createElement('option');
+                        opt.value = v.voiceURI;
+                        opt.text = `${v.name} (${v.lang})`;
+                        sel.appendChild(opt);
+                    });
+                }
+            };
+            window.speechSynthesis.onvoiceschanged = loadVoices;
+            loadVoices();
+            const savedMarquee = localStorage.getItem('antrian_marquee_text');
+            if (savedMarquee) marqueeText = savedMarquee;
+            const savedYoutube = localStorage.getItem('antrian_youtube_url');
+            if (savedYoutube) youtubeUrl = savedYoutube;
+            document.getElementById('marqueeTextInput').value = marqueeText;
+            document.getElementById('youtubeLinkInput').value = youtubeUrl;
+            document.getElementById('youtubeFrame').src = youtubeUrl;
+        }
+        function speakText(text) {
+            if (!soundEnabled || !window.speechSynthesis) return;
+            let u = new SpeechSynthesisUtterance(text);
+            u.volume = volume;
+            if (selectedVoiceURI) u.voice = availableVoices.find(v => v.voiceURI === selectedVoiceURI);
+            window.speechSynthesis.cancel();
+            window.speechSynthesis.speak(u);
+        }
+        function panggilDenganSuara(nomor, loket) {
+            speakText(`Nomor ${formatNomor(nomor)} ke loket ${loket}`);
+        }
+
+        // ==================== ADMIN ====================
         function renderAdminTable() {
-            const tbody = document.getElementById('operatorTableBody');
-            if(!tbody) return;
+            let tbody = document.getElementById('operatorTableBody');
             tbody.innerHTML = '';
             operators.forEach(op => {
-                const row = tbody.insertRow();
+                let row = tbody.insertRow();
                 row.insertCell(0).innerHTML = op.nama;
                 row.insertCell(1).innerHTML = op.username;
                 row.insertCell(2).innerHTML = op.loket;
-                row.insertCell(3).innerHTML = `<span class="px-2 py-1 rounded-full text-xs ${op.status === 'Aktif' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}">${op.status}</span>`;
-                const actionCell = row.insertCell(4);
-                actionCell.className = "text-center";
-                actionCell.innerHTML = `<button class="editOperator text-blue-600 mx-1" data-id="${op.id}"><i class="fas fa-edit"></i></button><button class="deleteOperator text-red-600 mx-1" data-id="${op.id}"><i class="fas fa-trash-alt"></i></button>`;
+                row.insertCell(3).innerHTML = `<span class="px-2 py-1 rounded ${op.status==='Aktif'?'bg-green-100':'bg-red-100'}">${op.status}</span>`;
+                row.insertCell(4).innerHTML = `<button class="editOperator text-blue-600" data-id="${op.id}">Edit</button> <button class="deleteOperator text-red-600" data-id="${op.id}">Hapus</button>`;
             });
-            attachOperatorEvents();
-        }
-
-        function attachOperatorEvents() {
-            document.querySelectorAll('.editOperator').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    const id = parseInt(btn.dataset.id);
-                    const op = operators.find(o => o.id === id);
-                    if(op) {
-                        document.getElementById('modalTitle').innerText = "Edit Operator";
-                        document.getElementById('editOperatorId').value = op.id;
-                        document.getElementById('opNama').value = op.nama;
-                        document.getElementById('opUsername').value = op.username;
-                        document.getElementById('opLoket').value = op.loket;
-                        document.getElementById('opStatus').value = op.status;
-                        document.getElementById('operatorModal').classList.remove('hidden');
-                    }
-                });
+            document.querySelectorAll('.editOperator').forEach(btn => btn.onclick = () => {
+                let op = operators.find(o => o.id == btn.dataset.id);
+                if(op) {
+                    document.getElementById('editOperatorId').value = op.id;
+                    document.getElementById('opNama').value = op.nama;
+                    document.getElementById('opUsername').value = op.username;
+                    document.getElementById('opLoket').value = op.loket;
+                    document.getElementById('opStatus').value = op.status;
+                    document.getElementById('operatorModal').classList.remove('hidden');
+                }
             });
-            document.querySelectorAll('.deleteOperator').forEach(btn => {
-                btn.addEventListener('click', () => {
-                    if(confirm('Hapus operator?')) {
-                        const id = parseInt(btn.dataset.id);
-                        operators = operators.filter(o => o.id !== id);
-                        // Hapus juga serving jika ada yang dilayani operator tsb? Biarkan saja data history
-                        renderAdminTable();
-                        renderOperatorTabs();  // update tab operator
-                        renderDisplayView();
-                    }
-                });
+            document.querySelectorAll('.deleteOperator').forEach(btn => btn.onclick = () => {
+                if(confirm('Hapus operator?')) {
+                    operators = operators.filter(o => o.id != btn.dataset.id);
+                    renderAdminTable();
+                    renderDisplayView(); // update display
+                }
             });
         }
-
         function saveOperatorHandler() {
-            const id = document.getElementById('editOperatorId').value;
-            const nama = document.getElementById('opNama').value.trim();
-            const username = document.getElementById('opUsername').value.trim();
-            const loket = document.getElementById('opLoket').value;
-            const status = document.getElementById('opStatus').value;
-            if(!nama || !username) { alert("Nama dan username wajib"); return; }
-            if(id === "") {
-                operators.push({ id: nextOperatorId++, nama, username, loket, status });
-            } else {
-                const idx = operators.findIndex(o => o.id == id);
-                if(idx !== -1) operators[idx] = { ...operators[idx], nama, username, loket, status };
+            let id = document.getElementById('editOperatorId').value;
+            let nama = document.getElementById('opNama').value, username = document.getElementById('opUsername').value, loket = document.getElementById('opLoket').value, status = document.getElementById('opStatus').value;
+            if (!nama || !username) return alert('Isi lengkap');
+            if (id === "") operators.push({ id: nextOperatorId++, nama, username, loket, status });
+            else {
+                let idx = operators.findIndex(o => o.id == id);
+                if(idx!==-1) operators[idx] = { ...operators[idx], nama, username, loket, status };
             }
             renderAdminTable();
-            renderOperatorTabs();
             renderDisplayView();
             closeModal();
         }
-
-        function closeModal() {
-            document.getElementById('operatorModal').classList.add('hidden');
-            document.getElementById('editOperatorId').value = '';
-            document.getElementById('opNama').value = '';
-            document.getElementById('opUsername').value = '';
-            document.getElementById('opLoket').value = '1';
-            document.getElementById('opStatus').value = 'Aktif';
-        }
-
-        // ==================== RENDER TAB OPERATOR (sesuai jumlah operator Aktif) ====================
-        function renderOperatorTabs() {
-            const activeOps = operators.filter(op => op.status === "Aktif");
-            const container = document.getElementById('operatorTabsContainer');
-            if(!container) return;
-            container.innerHTML = '';
-            if(activeOps.length === 0) {
-                container.innerHTML = '<div class="p-4 text-gray-500">Belum ada operator aktif. Tambahkan via Admin.</div>';
-                document.getElementById('waitingNumbersContainer').innerHTML = '<div class="col-span-full text-center py-8 text-gray-400">Tidak ada operator</div>';
-                return;
+        function closeModal() { document.getElementById('operatorModal').classList.add('hidden'); }
+        function resetAntrian() {
+            if(confirm('Reset semua antrian? Akan menghapus semua antrian waiting & serving.')) {
+                lastIssuedNumber = 0;
+                waitingNumbers = [];
+                servingList = [];
+                callLogs = [];
+                if(currentOperator) renderOperatorContent();
+                renderDisplayView();
+                alert('Reset berhasil');
             }
-            activeOps.forEach((op, idx) => {
-                const tab = document.createElement('button');
-                tab.innerText = `${op.nama} (Loket ${op.loket})`;
-                tab.className = `px-5 py-2 text-sm font-medium focus:outline-none ${currentOperatorId === op.id ? 'tab-active bg-indigo-600 text-white' : 'tab-inactive bg-gray-200 text-gray-700 hover:bg-gray-300'}`;
-                tab.onclick = () => {
-                    currentOperatorId = op.id;
-                    renderOperatorTabs();   // refresh tampilan tab aktif
-                    renderOperatorContent(); // load konten untuk operator terpilih
-                };
-                container.appendChild(tab);
-            });
-            // Jika belum ada currentOperatorId, set ke yang pertama
-            if(!currentOperatorId && activeOps.length) currentOperatorId = activeOps[0].id;
-            if(currentOperatorId) renderOperatorContent();
         }
 
+        // ==================== OPERATOR ====================
+        function renderDaftarOperator() {
+            let container = document.getElementById('operatorListContainer');
+            let aktif = operators.filter(o => o.status === 'Aktif');
+            container.innerHTML = '';
+            aktif.forEach(op => {
+                let div = document.createElement('div');
+                div.className = "bg-gray-100 p-4 rounded text-center cursor-pointer hover:shadow";
+                div.innerHTML = `<i class="fas fa-user-circle text-4xl"></i><h3 class="font-bold">${op.nama}</h3><p>Loket ${op.loket}</p><button class="pilihOperator mt-2 bg-indigo-600 text-white px-3 py-1 rounded" data-id="${op.id}">Pilih</button>`;
+                container.appendChild(div);
+            });
+            document.querySelectorAll('.pilihOperator').forEach(btn => btn.onclick = () => {
+                let id = parseInt(btn.dataset.id);
+                currentOperator = operators.find(o => o.id === id);
+                showOperatorSpesifik();
+            });
+        }
+        function showOperatorSpesifik() {
+            document.getElementById('operatorTitle').innerHTML = `Operator: ${currentOperator.nama}`;
+            document.getElementById('operatorLoketInfo').innerHTML = `Loket ${currentOperator.loket}`;
+            renderOperatorContent();
+            showView('viewOperatorSpesifik');
+        }
         function renderOperatorContent() {
-            const operator = operators.find(op => op.id === currentOperatorId);
-            if(!operator) return;
-            document.getElementById('activeOperatorInfo').innerHTML = `<i class="fas fa-user-circle"></i> Operator: ${operator.nama} - Loket ${operator.loket}`;
-            // Tampilkan waiting numbers (semua nomor yang belum dipanggil)
-            const container = document.getElementById('waitingNumbersContainer');
+            let container = document.getElementById('waitingNumbersContainer');
             container.innerHTML = '';
             waitingNumbers.forEach(num => {
-                const btn = document.createElement('button');
-                btn.innerText = num;
-                btn.className = "btn-number bg-indigo-50 hover:bg-indigo-600 hover:text-white border border-indigo-200 rounded-lg p-3 text-center font-bold text-lg transition";
-                btn.onclick = () => panggilNomor(num, operator);
+                let btn = document.createElement('button');
+                btn.innerText = formatNomor(num);
+                btn.className = "bg-indigo-100 p-2 rounded font-bold";
+                btn.onclick = () => panggilNomor(num);
                 container.appendChild(btn);
             });
-            if(waitingNumbers.length === 0) container.innerHTML = '<div class="col-span-full text-center py-8 text-gray-400">Tidak ada antrian menunggu</div>';
-            // Tampilkan serving list semua loket
-            const servingDiv = document.getElementById('servingList');
+            let servingDiv = document.getElementById('servingList');
             servingDiv.innerHTML = '';
-            if(servingList.length === 0) servingDiv.innerHTML = '<div class="text-gray-400 text-center">Tidak ada antrian dilayani</div>';
             servingList.forEach(serv => {
-                const div = document.createElement('div');
-                div.className = "flex justify-between items-center bg-yellow-50 p-2 rounded border";
-                div.innerHTML = `<div><span class="font-bold">${serv.nomor}</span> (Loket ${serv.loket})<br><span class="text-xs">${serv.waktu}</span></div>
-                                <button onclick="selesaikanNomor(${serv.nomor})" class="bg-green-500 text-white px-2 py-1 rounded text-sm"><i class="fas fa-check"></i> Selesai</button>`;
-                servingDiv.appendChild(div);
+                servingDiv.innerHTML += `<div class="flex justify-between bg-yellow-50 p-2 rounded mb-1"><span>${formatNomor(serv.nomor)} (Loket ${serv.loket})</span><button onclick="selesaikanNomor(${serv.nomor})" class="bg-green-500 text-white px-2 rounded">Selesai</button></div>`;
             });
-            // Log panggilan
-            const logDiv = document.getElementById('callLog');
-            logDiv.innerHTML = callLogs.map(log => `<div><i class="fas fa-bell text-indigo-500"></i> ${log}</div>`).join('');
-            if(callLogs.length === 0) logDiv.innerHTML = '<div class="text-gray-400">Belum ada panggilan</div>';
+            let logDiv = document.getElementById('callLog');
+            logDiv.innerHTML = callLogs.map(l => `<div class="text-xs">${l}</div>`).join('');
         }
-
-        function panggilNomor(nomor, operator) {
-            if(!waitingNumbers.includes(nomor)) { alert("Nomor sudah dipanggil atau selesai."); return; }
-            const waktu = new Date().toLocaleTimeString('id-ID');
-            // Pindahkan ke servingList
-            servingList.push({ nomor, loket: operator.loket, waktu, operatorNama: operator.nama });
+        function panggilNomor(nomor) {
+            if(!waitingNumbers.includes(nomor)) return alert('Nomor tidak tersedia');
+            let waktu = new Date().toLocaleTimeString('id-ID');
+            servingList.push({ nomor, loket: currentOperator.loket, waktu });
             waitingNumbers = waitingNumbers.filter(n => n !== nomor);
-            callLogs.unshift(`${waktu} - ${operator.nama} (Loket ${operator.loket}) memanggil ${nomor}`);
-            if(callLogs.length > 15) callLogs.pop();
+            callLogs.unshift(`${waktu} - ${currentOperator.nama} panggil ${formatNomor(nomor)}`);
+            if(callLogs.length > 20) callLogs.pop();
             renderOperatorContent();
             renderDisplayView();
+            panggilDenganSuara(nomor, currentOperator.loket);
         }
-
-        function selesaikanNomor(nomor) {
+        window.selesaikanNomor = function(nomor) {
             servingList = servingList.filter(s => s.nomor !== nomor);
             renderOperatorContent();
             renderDisplayView();
+        };
+
+        // ==================== MESIN ANTRIAN ====================
+        function ambilNomorAntrian() {
+            let nomorBaru = lastIssuedNumber + 1;
+            lastIssuedNumber = nomorBaru;
+            waitingNumbers.push(nomorBaru);
+            waitingNumbers.sort((a,b)=>a-b);
+            let divNomor = document.getElementById('nomorBaru');
+            divNomor.innerText = formatNomor(nomorBaru);
+            divNomor.classList.remove('hidden');
+            setTimeout(() => divNomor.classList.add('hidden'), 4000);
+            if(currentOperator) renderOperatorContent();
+            renderDisplayView();
+            speakText(`Nomor antrian ${formatNomor(nomorBaru)} telah keluar`);
         }
 
-        // ==================== RENDER DISPLAY PUBLIK (per loket) ====================
+        // ==================== DISPLAY PUBLIK (BARU) ====================
+        // Update jam dan hari real-time
+        function updateClock() {
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            const dayStr = now.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+            document.getElementById('currentTime') && (document.getElementById('currentTime').innerText = timeStr);
+            document.getElementById('currentDay') && (document.getElementById('currentDay').innerText = dayStr);
+        }
+        setInterval(updateClock, 1000);
+
         function renderDisplayView() {
-            const grid = document.getElementById('displayGrid');
-            if(!grid) return;
-            // Dapatkan semua loket unik dari operator aktif (atau dari serving)
-            const allLokets = [...new Set(operators.filter(op => op.status === "Aktif").map(op => op.loket))];
-            if(allLokets.length === 0) { grid.innerHTML = '<div class="text-white">Belum ada operator aktif</div>'; return; }
-            grid.innerHTML = '';
-            allLokets.forEach(loket => {
-                const serving = servingList.find(s => s.loket == loket);
-                const currentNumber = serving ? serving.nomor : '---';
-                // Cari next number dari waiting (sederhana: ambil angka terkecil yang lebih besar dari currentNumber, bisa juga disesuaikan)
-                let nextNumber = '---';
-                if(serving) {
-                    const next = waitingNumbers.filter(n => n > serving.nomor).sort((a,b)=>a-b)[0];
-                    nextNumber = next ? next : '-';
-                } else {
-                    const firstWaiting = waitingNumbers.length ? waitingNumbers[0] : '-';
-                    nextNumber = firstWaiting;
-                }
-                const card = document.createElement('div');
-                card.className = "display-card rounded-2xl shadow-2xl p-6 text-center border border-indigo-500";
-                card.innerHTML = `<div class="text-indigo-300 text-xl">LOKET ${loket}</div>
-                                <div class="text-7xl font-mono font-bold text-white my-3">${currentNumber}</div>
-                                <div class="text-green-300">Sedang dilayani</div>
-                                <div class="mt-3 text-gray-400">Berikutnya: ${nextNumber}</div>`;
-                grid.appendChild(card);
-            });
+            // Kiri: menampilkan kartu untuk setiap loket yang aktif (atau yang pernah dipanggil)
+            const activeOperators = operators.filter(op => op.status === "Aktif").sort((a,b) => a.loket - b.loket);
+            const leftContainer = document.getElementById('leftPanelContainer');
+            if(leftContainer) {
+                leftContainer.innerHTML = '';
+                activeOperators.forEach(op => {
+                    // cari serving terakhir untuk loket ini
+                    const serving = servingList.filter(s => s.loket == op.loket).pop(); // ambil yang terakhir dipanggil
+                    const lastNumber = serving ? serving.nomor : null;
+                    const displayNumber = lastNumber ? formatNomor(lastNumber) : '---';
+                    const card = document.createElement('div');
+                    card.className = "display-card-loket p-5 text-center";
+                    card.innerHTML = `
+                        <div class="text-indigo-300 text-xl font-bold mb-1">LOKET ${op.loket}</div>
+                        <div class="text-gray-400 text-sm">Nomor terakhir dipanggil</div>
+                        <div class="nomor-besar text-white mt-2">${displayNumber}</div>
+                        <div class="text-green-400 text-xs mt-2">${serving ? `Pukul ${serving.waktu}` : 'Belum ada panggilan'}</div>
+                    `;
+                    leftContainer.appendChild(card);
+                });
+                if(activeOperators.length === 0) leftContainer.innerHTML = '<div class="col-span-full text-white">Belum ada operator aktif</div>';
+            }
+
+            // Bawah: daftar operator dalam baris (flex wrap, max 4 per baris)
+            const bottomGrid = document.getElementById('operatorGridBottom');
+            if(bottomGrid) {
+                bottomGrid.innerHTML = '';
+                activeOperators.forEach(op => {
+                    const serving = servingList.filter(s => s.loket == op.loket).pop();
+                    const lastNumber = serving ? serving.nomor : null;
+                    const card = document.createElement('div');
+                    card.className = "operator-card p-3 text-center w-40";
+                    card.innerHTML = `
+                        <i class="fas fa-desktop text-indigo-400 text-2xl"></i>
+                        <div class="text-white font-bold">Loket ${op.loket}</div>
+                        <div class="text-indigo-300 text-xl font-mono">${lastNumber ? formatNomor(lastNumber) : '---'}</div>
+                        <div class="text-gray-400 text-xs">${op.nama}</div>
+                    `;
+                    bottomGrid.appendChild(card);
+                });
+            }
+
+            // Update YouTube jika ada perubahan
+            const youtubeFrame = document.getElementById('youtubeFrame');
+            const youtubeInput = document.getElementById('youtubeLinkInput');
+            if(youtubeFrame && youtubeInput) {
+                const newUrl = youtubeInput.value;
+                if(newUrl !== youtubeFrame.src) youtubeFrame.src = newUrl;
+            }
         }
 
-        // ==================== SWITCH VIEW & INIT ====================
-        const viewAdmin = document.getElementById('viewAdmin');
-        const viewOperator = document.getElementById('viewOperator');
-        const viewDisplay = document.getElementById('viewDisplay');
-        document.getElementById('btnAdmin').onclick = () => { viewAdmin.classList.remove('hidden'); viewOperator.classList.add('hidden'); viewDisplay.classList.add('hidden'); };
-        document.getElementById('btnOperator').onclick = () => { viewAdmin.classList.add('hidden'); viewOperator.classList.remove('hidden'); viewDisplay.classList.add('hidden'); renderOperatorTabs(); };
-        document.getElementById('btnDisplay').onclick = () => { viewAdmin.classList.add('hidden'); viewOperator.classList.add('hidden'); viewDisplay.classList.remove('hidden'); renderDisplayView(); };
-
-        document.getElementById('openModalBtn').onclick = () => { document.getElementById('modalTitle').innerText = "Tambah Operator"; document.getElementById('editOperatorId').value = ''; document.getElementById('operatorModal').classList.remove('hidden'); };
+        // ==================== EVENT LISTENERS ====================
+        document.getElementById('menuAdmin').onclick = () => { renderAdminTable(); showView('viewAdmin'); };
+        document.getElementById('menuOperator').onclick = () => { renderDaftarOperator(); showView('viewDaftarOperator'); };
+        document.getElementById('menuMesinAntrian').onclick = () => { showView('viewMesinAntrian'); };
+        document.getElementById('menuDisplay').onclick = () => { renderDisplayView(); showView('viewDisplay'); updateClock(); };
+        document.querySelectorAll('.backToMenu').forEach(btn => btn.onclick = () => { currentOperator = null; showView('menuUtama'); });
+        document.getElementById('logoutBtn').onclick = logout;
+        document.getElementById('ambilNomorBtn').onclick = ambilNomorAntrian;
+        document.getElementById('resetNomorBtn').onclick = resetAntrian;
+        document.getElementById('openModalBtn').onclick = () => { document.getElementById('editOperatorId').value = ''; document.getElementById('operatorModal').classList.remove('hidden'); };
         document.getElementById('closeModalBtn').onclick = closeModal;
         document.getElementById('saveOperatorBtn').onclick = saveOperatorHandler;
+        document.getElementById('loginBtn').onclick = login;
+        document.getElementById('saveMarqueeBtn').onclick = () => {
+            let newText = document.getElementById('marqueeTextInput').value;
+            marqueeText = newText;
+            localStorage.setItem('antrian_marquee_text', marqueeText);
+            // tidak ada marquee di display baru, tapi simpan saja
+            alert('Teks berjalan disimpan (belum ditampilkan di display baru)');
+        };
+        document.getElementById('saveYoutubeBtn').onclick = () => {
+            let newUrl = document.getElementById('youtubeLinkInput').value;
+            youtubeUrl = newUrl;
+            localStorage.setItem('antrian_youtube_url', youtubeUrl);
+            document.getElementById('youtubeFrame').src = youtubeUrl;
+            alert('Link YouTube diperbarui');
+        };
+        // Suara controls
+        let soundChk = document.getElementById('soundEnabledCheckbox');
+        let volSlider = document.getElementById('volumeSlider');
+        let volVal = document.getElementById('volumeValue');
+        let voiceSel = document.getElementById('voiceSelect');
+        let testBtn = document.getElementById('testSoundBtn');
+        if(soundChk) soundChk.onchange = e => { soundEnabled = e.target.checked; localStorage.setItem('antrian_sound_enabled', soundEnabled); };
+        if(volSlider) volSlider.oninput = e => { volume = e.target.value/100; volVal.innerText = e.target.value+'%'; localStorage.setItem('antrian_volume', volume); };
+        if(voiceSel) voiceSel.onchange = e => { selectedVoiceURI = e.target.value; localStorage.setItem('antrian_voice_uri', selectedVoiceURI); };
+        if(testBtn) testBtn.onclick = () => speakText("Tes suara antrian");
 
-        // Inisialisasi awal
+        // Inisialisasi
+        initSpeech();
         renderAdminTable();
-        renderOperatorTabs();
         renderDisplayView();
-        viewAdmin.classList.remove('hidden');
-        viewOperator.classList.add('hidden');
-        viewDisplay.classList.add('hidden');
+        checkLogin();
+        showView('menuUtama');
+        // Contoh data awal agar tampak hidup
+        if(servingList.length === 0 && waitingNumbers.length === 0 && lastIssuedNumber === 0) {
+            servingList.push({ nomor: 145, loket: 1, waktu: "10:25:30" });
+            servingList.push({ nomor: 146, loket: 2, waktu: "10:26:00" });
+            servingList.push({ nomor: 147, loket: 4, waktu: "10:27:15" });
+            servingList.push({ nomor: 148, loket: 5, waktu: "10:28:00" });
+            lastIssuedNumber = 148;
+            waitingNumbers = [149, 150];
+            renderDisplayView();
+        }
+        updateClock();
     </script>
 </body>
 </html>
