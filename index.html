@@ -3,40 +3,39 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Aplikasi Antrian - Display dengan YouTube & Waktu</title>
+    <title>Aplikasi Antrian - Display Panel Kiri (Loket Terakhir Panggil)</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
         * { font-family: 'Inter', sans-serif; }
         body { background: #0f172a; }
-        .display-card-loket {
+        .last-call-card {
             background: linear-gradient(145deg, #1e293b, #0f172a);
-            border-radius: 1.5rem;
-            border: 1px solid rgba(99, 102, 241, 0.4);
-            transition: transform 0.2s;
+            border-radius: 2rem;
+            border: 2px solid #4f46e5;
+            box-shadow: 0 20px 35px -10px rgba(79, 70, 229, 0.4);
+            transition: all 0.2s;
         }
-        .display-card-loket:hover { transform: translateY(-4px); }
-        .nomor-besar {
-            font-size: 3rem;
+        .nomor-raksasa {
+            font-size: 4rem;
             font-weight: 800;
-            text-shadow: 0 0 10px rgba(99,102,241,0.5);
+            letter-spacing: 6px;
+            text-shadow: 0 0 20px rgba(79, 70, 229, 0.8);
         }
         @media (min-width: 1024px) {
-            .nomor-besar { font-size: 3.5rem; }
+            .nomor-raksasa { font-size: 5rem; }
         }
-        .operator-card {
+        .operator-card-bottom {
             background: rgba(30, 41, 59, 0.8);
             backdrop-filter: blur(4px);
             border-radius: 1.2rem;
             border: 1px solid rgba(99, 102, 241, 0.3);
             transition: all 0.2s;
+            width: 170px;
         }
-        .operator-card:hover { background: rgba(30, 41, 59, 1); }
-        .clock {
-            font-family: monospace;
-            letter-spacing: 2px;
-        }
+        .operator-card-bottom:hover { background: rgba(30, 41, 59, 1); transform: translateY(-3px); }
+        .clock { font-family: monospace; letter-spacing: 2px; }
     </style>
 </head>
 <body>
@@ -85,7 +84,7 @@
         </div>
     </div>
 
-    <!-- VIEW ADMIN (disederhanakan tapi tetap fungsional) -->
+    <!-- VIEW ADMIN (sama seperti sebelumnya, ringkas) -->
     <div id="viewAdmin" class="max-w-6xl mx-auto p-6 hidden">
         <div class="bg-white rounded-xl shadow-lg p-6">
             <div class="flex justify-between items-center mb-4">
@@ -101,9 +100,9 @@
                 <tbody id="operatorTableBody"></tbody>
             </table>
             <div class="mt-6 border p-4 rounded">
-                <label class="font-semibold">Teks Berjalan Display:</label>
-                <input type="text" id="marqueeTextInput" class="w-full border rounded px-3 py-2 mt-1" value="Selamat Datang di Sistem Antrian">
-                <button id="saveMarqueeBtn" class="mt-2 bg-indigo-600 text-white px-4 py-2 rounded">Simpan Teks</button>
+                <label class="font-semibold">Link YouTube (Embed):</label>
+                <input type="text" id="youtubeLinkInput" class="w-full border rounded px-3 py-2 mt-1" value="https://www.youtube.com/embed/dQw4w9WgXcQ">
+                <button id="saveYoutubeBtn" class="mt-2 bg-red-600 text-white px-4 py-2 rounded">Update Video</button>
             </div>
             <div class="mt-4 border p-4 rounded">
                 <label class="font-semibold">Pengaturan Suara</label>
@@ -114,11 +113,6 @@
                     <select id="voiceSelect"></select>
                     <button id="testSoundBtn" class="bg-gray-200 px-3 py-1 rounded">Uji</button>
                 </div>
-            </div>
-            <div class="mt-4 border p-4 rounded">
-                <label class="font-semibold">Link YouTube (Embed):</label>
-                <input type="text" id="youtubeLinkInput" class="w-full border rounded px-3 py-2" placeholder="https://www.youtube.com/embed/..." value="https://www.youtube.com/embed/dQw4w9WgXcQ">
-                <button id="saveYoutubeBtn" class="mt-2 bg-red-600 text-white px-4 py-2 rounded">Update Video</button>
             </div>
         </div>
     </div>
@@ -152,10 +146,10 @@
         </div>
     </div>
 
-    <!-- ==================== DISPLAY PUBLIK (BARU) ==================== -->
+    <!-- ==================== DISPLAY PUBLIK (REVISI) ==================== -->
     <div id="viewDisplay" class="min-h-screen bg-gray-900 p-4 md:p-6 hidden">
         <div class="max-w-7xl mx-auto">
-            <!-- Header: Waktu dan Hari -->
+            <!-- Header: Jam & Hari -->
             <div class="flex justify-between items-center bg-black/30 rounded-2xl p-4 mb-6 backdrop-blur">
                 <div class="text-white">
                     <div class="text-3xl font-bold clock" id="currentTime">--:--:--</div>
@@ -164,30 +158,32 @@
                 <div class="text-indigo-300 text-sm italic">Sistem Antrian Digital</div>
             </div>
 
-            <!-- Dua Kolom: Kiri (Status Panggilan per Loket) & Kanan (YouTube) -->
+            <!-- Dua Kolom: Kiri (LOKET TERAKHIR PANGGIL) & Kanan (YouTube) -->
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-                <!-- Kiri: Daftar antrian yang sedang dilayani per loket (terbaru dipanggil) -->
-                <div class="lg:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <!-- Kontainer dinamis untuk daftar loket aktif dengan nomor terakhir dipanggil -->
-                    <div id="leftPanelContainer" class="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full">
-                        <!-- akan diisi JS -->
+                <!-- Kiri: Hanya satu kartu loket terakhir yang memanggil -->
+                <div class="lg:col-span-2 flex justify-center items-center">
+                    <div id="lastCallCard" class="last-call-card w-full max-w-md p-8 text-center">
+                        <div class="text-indigo-300 text-2xl font-bold mb-2">LOKET <span id="lastLoket">-</span></div>
+                        <div class="text-gray-400 text-sm uppercase tracking-wide">Panggilan Terakhir</div>
+                        <div class="nomor-raksasa text-white mt-3" id="lastNomor">---</div>
+                        <div class="text-green-400 mt-4 text-lg" id="lastWaktu">Belum ada panggilan</div>
                     </div>
                 </div>
                 <!-- Kanan: Frame YouTube -->
-                <div class="bg-black rounded-2xl overflow-hidden shadow-xl border border-indigo-500/30 h-full">
+                <div class="bg-black rounded-2xl overflow-hidden shadow-xl border border-indigo-500/30">
                     <iframe id="youtubeFrame" class="w-full aspect-video" src="https://www.youtube.com/embed/dQw4w9WgXcQ" frameborder="0" allowfullscreen></iframe>
                 </div>
             </div>
 
-            <!-- Bawah: Daftar operator (loket) dalam baris, max 4 per baris -->
+            <!-- Bawah: Daftar operator (semua loket) dalam baris, max 4 per baris -->
             <div class="mt-6">
                 <h3 class="text-white text-xl font-semibold mb-3"><i class="fas fa-user-tie mr-2"></i> Daftar Operator</h3>
                 <div id="operatorGridBottom" class="flex flex-wrap gap-4 justify-start">
-                    <!-- akan diisi JS -->
+                    <!-- akan diisi JS dinamis -->
                 </div>
             </div>
 
-            <!-- Tombol kembali di footer (tidak mencolok) -->
+            <!-- Tombol kembali di footer -->
             <div class="text-center mt-10">
                 <button class="backToMenu bg-white/10 backdrop-blur text-white/80 px-5 py-2 rounded-full hover:bg-white/20"><i class="fas fa-arrow-left mr-2"></i> Kembali ke Menu</button>
             </div>
@@ -226,13 +222,14 @@
         let servingList = [];       // { nomor, loket, waktu }
         let callLogs = [];
         let currentOperator = null;
-        let marqueeText = "Selamat Datang di Sistem Antrian";
         let youtubeUrl = "https://www.youtube.com/embed/dQw4w9WgXcQ";
 
-        // Helper format nomor tiga digit
+        // Data untuk panel kiri (loket terakhir panggil)
+        let lastCall = null; // { loket, nomor, waktu }
+
         function formatNomor(num) { return String(num).padStart(3, '0'); }
 
-        // ==================== FUNGSI LOGIN & NAVIGASI ====================
+        // ==================== LOGIN & NAVIGASI ====================
         function checkLogin() {
             if (sessionStorage.getItem('loggedIn') === 'true') {
                 document.getElementById('loginScreen').classList.add('hidden');
@@ -260,7 +257,7 @@
             document.getElementById(viewId).classList.remove('hidden');
         }
 
-        // ==================== SUARA (ringkas) ====================
+        // ==================== SUARA ====================
         let soundEnabled = true, volume = 0.8, selectedVoiceURI = null, availableVoices = [];
         function initSpeech() {
             if (!window.speechSynthesis) return;
@@ -279,11 +276,8 @@
             };
             window.speechSynthesis.onvoiceschanged = loadVoices;
             loadVoices();
-            const savedMarquee = localStorage.getItem('antrian_marquee_text');
-            if (savedMarquee) marqueeText = savedMarquee;
             const savedYoutube = localStorage.getItem('antrian_youtube_url');
             if (savedYoutube) youtubeUrl = savedYoutube;
-            document.getElementById('marqueeTextInput').value = marqueeText;
             document.getElementById('youtubeLinkInput').value = youtubeUrl;
             document.getElementById('youtubeFrame').src = youtubeUrl;
         }
@@ -326,7 +320,7 @@
                 if(confirm('Hapus operator?')) {
                     operators = operators.filter(o => o.id != btn.dataset.id);
                     renderAdminTable();
-                    renderDisplayView(); // update display
+                    renderDisplayView();
                 }
             });
         }
@@ -345,11 +339,12 @@
         }
         function closeModal() { document.getElementById('operatorModal').classList.add('hidden'); }
         function resetAntrian() {
-            if(confirm('Reset semua antrian? Akan menghapus semua antrian waiting & serving.')) {
+            if(confirm('Reset semua antrian? Akan menghapus semua antrian waiting & serving, serta data panggilan terakhir.')) {
                 lastIssuedNumber = 0;
                 waitingNumbers = [];
                 servingList = [];
                 callLogs = [];
+                lastCall = null;
                 if(currentOperator) renderOperatorContent();
                 renderDisplayView();
                 alert('Reset berhasil');
@@ -404,8 +399,16 @@
             waitingNumbers = waitingNumbers.filter(n => n !== nomor);
             callLogs.unshift(`${waktu} - ${currentOperator.nama} panggil ${formatNomor(nomor)}`);
             if(callLogs.length > 20) callLogs.pop();
+
+            // Update data untuk panel kiri (loket terakhir panggil)
+            lastCall = {
+                loket: currentOperator.loket,
+                nomor: nomor,
+                waktu: waktu
+            };
+
             renderOperatorContent();
-            renderDisplayView();
+            renderDisplayView(); // update tampilan display
             panggilDenganSuara(nomor, currentOperator.loket);
         }
         window.selesaikanNomor = function(nomor) {
@@ -429,8 +432,7 @@
             speakText(`Nomor antrian ${formatNomor(nomorBaru)} telah keluar`);
         }
 
-        // ==================== DISPLAY PUBLIK (BARU) ====================
-        // Update jam dan hari real-time
+        // ==================== DISPLAY PUBLIK (REVISI) ====================
         function updateClock() {
             const now = new Date();
             const timeStr = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
@@ -441,49 +443,43 @@
         setInterval(updateClock, 1000);
 
         function renderDisplayView() {
-            // Kiri: menampilkan kartu untuk setiap loket yang aktif (atau yang pernah dipanggil)
-            const activeOperators = operators.filter(op => op.status === "Aktif").sort((a,b) => a.loket - b.loket);
-            const leftContainer = document.getElementById('leftPanelContainer');
-            if(leftContainer) {
-                leftContainer.innerHTML = '';
-                activeOperators.forEach(op => {
-                    // cari serving terakhir untuk loket ini
-                    const serving = servingList.filter(s => s.loket == op.loket).pop(); // ambil yang terakhir dipanggil
-                    const lastNumber = serving ? serving.nomor : null;
-                    const displayNumber = lastNumber ? formatNomor(lastNumber) : '---';
-                    const card = document.createElement('div');
-                    card.className = "display-card-loket p-5 text-center";
-                    card.innerHTML = `
-                        <div class="text-indigo-300 text-xl font-bold mb-1">LOKET ${op.loket}</div>
-                        <div class="text-gray-400 text-sm">Nomor terakhir dipanggil</div>
-                        <div class="nomor-besar text-white mt-2">${displayNumber}</div>
-                        <div class="text-green-400 text-xs mt-2">${serving ? `Pukul ${serving.waktu}` : 'Belum ada panggilan'}</div>
-                    `;
-                    leftContainer.appendChild(card);
-                });
-                if(activeOperators.length === 0) leftContainer.innerHTML = '<div class="col-span-full text-white">Belum ada operator aktif</div>';
+            // 1. Panel kiri: tampilkan lastCall (loket terakhir panggil)
+            if (lastCall) {
+                document.getElementById('lastLoket').innerText = lastCall.loket;
+                document.getElementById('lastNomor').innerHTML = `${(lastCall.loket <= 3 ? 'A' : 'B')} ${formatNomor(lastCall.nomor)}`;
+                document.getElementById('lastWaktu').innerHTML = `Pukul ${lastCall.waktu}`;
+            } else {
+                document.getElementById('lastLoket').innerText = '-';
+                document.getElementById('lastNomor').innerHTML = '---';
+                document.getElementById('lastWaktu').innerHTML = 'Belum ada panggilan';
             }
 
-            // Bawah: daftar operator dalam baris (flex wrap, max 4 per baris)
+            // 2. Bawah: daftar operator (semua aktif) dalam card, max 4 per baris (flex wrap)
+            const activeOperators = operators.filter(op => op.status === "Aktif").sort((a,b) => a.loket - b.loket);
             const bottomGrid = document.getElementById('operatorGridBottom');
             if(bottomGrid) {
                 bottomGrid.innerHTML = '';
                 activeOperators.forEach(op => {
-                    const serving = servingList.filter(s => s.loket == op.loket).pop();
-                    const lastNumber = serving ? serving.nomor : null;
+                    // cari nomor terakhir yang dipanggil oleh operator ini (dari servingList atau dari lastCall khusus operator)
+                    // Untuk sederhana, ambil dari servingList yang terbaru untuk loket tersebut
+                    const lastForThis = servingList.filter(s => s.loket == op.loket).pop();
+                    const lastNumber = lastForThis ? lastForThis.nomor : null;
+                    const displayNum = lastNumber ? formatNomor(lastNumber) : '---';
+                    const prefix = (op.loket <= 3) ? 'A' : 'B';
                     const card = document.createElement('div');
-                    card.className = "operator-card p-3 text-center w-40";
+                    card.className = "operator-card-bottom p-3 text-center";
                     card.innerHTML = `
                         <i class="fas fa-desktop text-indigo-400 text-2xl"></i>
-                        <div class="text-white font-bold">Loket ${op.loket}</div>
-                        <div class="text-indigo-300 text-xl font-mono">${lastNumber ? formatNomor(lastNumber) : '---'}</div>
-                        <div class="text-gray-400 text-xs">${op.nama}</div>
+                        <div class="text-white font-bold text-lg">LOKET ${op.loket}</div>
+                        <div class="text-indigo-300 text-2xl font-mono font-bold">${prefix} ${displayNum}</div>
+                        <div class="text-gray-400 text-xs mt-1">${op.nama}</div>
                     `;
                     bottomGrid.appendChild(card);
                 });
+                if(activeOperators.length === 0) bottomGrid.innerHTML = '<div class="text-white">Belum ada operator aktif</div>';
             }
 
-            // Update YouTube jika ada perubahan
+            // 3. Update YouTube jika ada perubahan
             const youtubeFrame = document.getElementById('youtubeFrame');
             const youtubeInput = document.getElementById('youtubeLinkInput');
             if(youtubeFrame && youtubeInput) {
@@ -505,13 +501,6 @@
         document.getElementById('closeModalBtn').onclick = closeModal;
         document.getElementById('saveOperatorBtn').onclick = saveOperatorHandler;
         document.getElementById('loginBtn').onclick = login;
-        document.getElementById('saveMarqueeBtn').onclick = () => {
-            let newText = document.getElementById('marqueeTextInput').value;
-            marqueeText = newText;
-            localStorage.setItem('antrian_marquee_text', marqueeText);
-            // tidak ada marquee di display baru, tapi simpan saja
-            alert('Teks berjalan disimpan (belum ditampilkan di display baru)');
-        };
         document.getElementById('saveYoutubeBtn').onclick = () => {
             let newUrl = document.getElementById('youtubeLinkInput').value;
             youtubeUrl = newUrl;
@@ -536,14 +525,17 @@
         renderDisplayView();
         checkLogin();
         showView('menuUtama');
-        // Contoh data awal agar tampak hidup
+        // Data contoh agar tampak hidup
         if(servingList.length === 0 && waitingNumbers.length === 0 && lastIssuedNumber === 0) {
             servingList.push({ nomor: 145, loket: 1, waktu: "10:25:30" });
             servingList.push({ nomor: 146, loket: 2, waktu: "10:26:00" });
-            servingList.push({ nomor: 147, loket: 4, waktu: "10:27:15" });
-            servingList.push({ nomor: 148, loket: 5, waktu: "10:28:00" });
-            lastIssuedNumber = 148;
-            waitingNumbers = [149, 150];
+            servingList.push({ nomor: 144, loket: 3, waktu: "09:58:12" });
+            servingList.push({ nomor: 143, loket: 4, waktu: "09:55:40" });
+            servingList.push({ nomor: 98, loket: 5, waktu: "09:50:15" });
+            lastIssuedNumber = 146;
+            waitingNumbers = [147, 148, 149];
+            // set lastCall ke yang terbaru (misal loket 2 dengan waktu 10:26:00)
+            lastCall = { loket: 2, nomor: 146, waktu: "10:26:00" };
             renderDisplayView();
         }
         updateClock();
